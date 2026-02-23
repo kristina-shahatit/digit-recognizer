@@ -60,6 +60,6 @@ This project is directly inspired by the pioneering work of Yann LeCun at Bell L
 
 - [ ] Add batch normalization for more stable training
 - [ ] Deeper architecture with residual connections (ResNet-style)
-- [ ] Elastic distortion augmentation (highly effective for handwriting)
-- [ ] Show top-3 predictions with confidence scores
+- [x] Elastic distortion augmentation (highly effective for handwriting)
+- [x] Show top-3 predictions with confidence scores
 - [ ] Extend to full word/sentence recognition with a sequence model (CRNN)

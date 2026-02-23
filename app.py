@@ -99,10 +99,13 @@ def predict():
 
     with torch.no_grad():
         probs = torch.softmax(model(tensor), dim=1).squeeze()
-        digit = probs.argmax().item()
-        confidence = probs[digit].item()
+        top3 = probs.topk(3)
 
-    return jsonify({"digit": digit, "confidence": round(confidence * 100, 1)})
+    results = [
+        {"digit": int(idx), "confidence": round(float(prob) * 100, 1)}
+        for prob, idx in zip(top3.values, top3.indices)
+    ]
+    return jsonify({"top3": results})
 
 
 if __name__ == "__main__":

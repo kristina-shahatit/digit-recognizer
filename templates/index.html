@@ -61,12 +61,62 @@
       text-align: center;
     }
 
-    #result span {
-      font-size: 3.5rem;
+    .top3 {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 280px;
+    }
+
+    .prediction-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .prediction-row.first .digit-label {
+      font-size: 2.8rem;
       font-weight: 800;
       color: #4f46e5;
-      display: block;
+      width: 48px;
+      text-align: center;
     }
+
+    .prediction-row .digit-label {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #6b7280;
+      width: 48px;
+      text-align: center;
+    }
+
+    .bar-wrap {
+      flex: 1;
+      background: #e5e7eb;
+      border-radius: 99px;
+      height: 12px;
+      overflow: hidden;
+    }
+
+    .prediction-row.first .bar-wrap { height: 16px; }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: #c7d2fe;
+      transition: width 0.35s ease;
+    }
+
+    .prediction-row.first .bar-fill { background: #4f46e5; }
+
+    .pct {
+      font-size: 0.85rem;
+      color: #6b7280;
+      width: 44px;
+      text-align: right;
+    }
+
+    .prediction-row.first .pct { font-weight: 700; color: #4f46e5; }
   </style>
 </head>
 <body>
@@ -82,6 +132,7 @@
   </div>
 
   <div id="result">Draw a digit above, then click Predict.</div>
+  <div id="top3-container"></div>
 
   <script>
     const canvas  = document.getElementById("canvas");
@@ -137,6 +188,7 @@
     document.getElementById("btn-clear").addEventListener("click", () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       result.innerHTML = "Draw a digit above, then click Predict.";
+      document.getElementById("top3-container").innerHTML = "";
     });
 
     // Predict
@@ -144,16 +196,28 @@
       result.innerHTML = "Thinking…";
       const imageData = canvas.toDataURL("image/png");
 
+      const container = document.getElementById("top3-container");
       try {
         const resp = await fetch("/predict", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ image: imageData }),
         });
-        const { digit, confidence } = await resp.json();
-        result.innerHTML = `<span>${digit}</span>Confidence: ${confidence}%`;
+        const { top3 } = await resp.json();
+        result.innerHTML = "";
+        container.innerHTML = `<div class="top3">${
+          top3.map((p, i) => `
+            <div class="prediction-row ${i === 0 ? "first" : ""}">
+              <div class="digit-label">${p.digit}</div>
+              <div class="bar-wrap">
+                <div class="bar-fill" style="width:${p.confidence}%"></div>
+              </div>
+              <div class="pct">${p.confidence}%</div>
+            </div>`).join("")
+        }</div>`;
       } catch {
         result.innerHTML = "Error — is the server running?";
+        container.innerHTML = "";
       }
     });
   </script>

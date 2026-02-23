@@ -40,6 +40,7 @@ def get_dataloaders(batch_size=64):
             translate=(0.1, 0.1), # ±10% shift
             scale=(0.9, 1.1),     # ±10% zoom
         ),
+        transforms.ElasticTransform(alpha=34.0, sigma=4.0),  # simulates natural pen-pressure variation
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
     ])

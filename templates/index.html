@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digit Recognizer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f0f2f5;
+      font-family: system-ui, sans-serif;
+      gap: 24px;
+      padding: 24px;
+    }
+
+    h1 { font-size: 1.6rem; color: #1a1a2e; }
+
+    #canvas-wrapper {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+
+    canvas {
+      display: block;
+      background: #1a1a2e;
+      cursor: crosshair;
+      touch-action: none; /* prevent scroll while drawing on touch */
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    button:active { opacity: 0.75; }
+
+    #btn-predict { background: #4f46e5; color: #fff; }
+    #btn-clear   { background: #e5e7eb; color: #374151; }
+
+    #result {
+      font-size: 1.15rem;
+      color: #374151;
+      min-height: 1.5em;
+      text-align: center;
+    }
+
+    #result span {
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: #4f46e5;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Handwritten Digit Recognizer</h1>
+
+  <div id="canvas-wrapper">
+    <canvas id="canvas" width="280" height="280"></canvas>
+  </div>
+
+  <div class="buttons">
+    <button id="btn-predict">Predict</button>
+    <button id="btn-clear">Clear</button>
+  </div>
+
+  <div id="result">Draw a digit above, then click Predict.</div>
+
+  <script>
+    const canvas  = document.getElementById("canvas");
+    const ctx     = canvas.getContext("2d");
+    const result  = document.getElementById("result");
+
+    // Drawing state
+    let drawing = false;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth   = 18;
+    ctx.lineCap     = "round";
+    ctx.lineJoin    = "round";
+
+    function pos(e) {
+      const r = canvas.getBoundingClientRect();
+      const src = e.touches ? e.touches[0] : e;
+      return { x: src.clientX - r.left, y: src.clientY - r.top };
+    }
+
+    function startDraw(e) {
+      e.preventDefault();
+      drawing = true;
+      const { x, y } = pos(e);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+
+    function draw(e) {
+      if (!drawing) return;
+      e.preventDefault();
+      const { x, y } = pos(e);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
+
+    function stopDraw(e) {
+      e.preventDefault();
+      drawing = false;
+    }
+
+    // Mouse
+    canvas.addEventListener("mousedown",  startDraw);
+    canvas.addEventListener("mousemove",  draw);
+    canvas.addEventListener("mouseup",    stopDraw);
+    canvas.addEventListener("mouseleave", stopDraw);
+
+    // Touch
+    canvas.addEventListener("touchstart", startDraw, { passive: false });
+    canvas.addEventListener("touchmove",  draw,      { passive: false });
+    canvas.addEventListener("touchend",   stopDraw,  { passive: false });
+
+    // Clear
+    document.getElementById("btn-clear").addEventListener("click", () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      result.innerHTML = "Draw a digit above, then click Predict.";
+    });
+
+    // Predict
+    document.getElementById("btn-predict").addEventListener("click", async () => {
+      result.innerHTML = "Thinking…";
+      const imageData = canvas.toDataURL("image/png");
+
+      try {
+        const resp = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: imageData }),
+        });
+        const { digit, confidence } = await resp.json();
+        result.innerHTML = `<span>${digit}</span>Confidence: ${confidence}%`;
+      } catch {
+        result.innerHTML = "Error — is the server running?";
+      }
+    });
+  </script>
+</body>
+</html>

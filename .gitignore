@@ -1,0 +1,17 @@
+# MNIST dataset (downloaded automatically, ~11 MB)
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/

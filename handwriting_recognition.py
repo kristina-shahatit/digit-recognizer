@@ -1,3 +1,5 @@
+import argparse
+import string
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -9,50 +11,73 @@ from PIL import Image
 # ── Model ──────────────────────────────────────────────────────────────────────
 
 class DigitCNN(nn.Module):
-    def __init__(self):
+    """
+    3-block CNN with BatchNorm.
+      num_classes=10  → MNIST digits
+      num_classes=47  → EMNIST balanced (digits + letters)
+    """
+    def __init__(self, num_classes=10):
         super().__init__()
         self.features = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=3, padding=1),  # 28x28 → 28x28
+            nn.Conv2d(1, 32, 3, padding=1),    # 28×28
+            nn.BatchNorm2d(32),
             nn.ReLU(),
-            nn.MaxPool2d(2),                              # 28x28 → 14x14
-            nn.Conv2d(32, 64, kernel_size=3, padding=1), # 14x14 → 14x14
+            nn.MaxPool2d(2),                    # 14×14
+            nn.Conv2d(32, 64, 3, padding=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(2),                              # 14x14 → 7x7
+            nn.MaxPool2d(2),                    # 7×7
+            nn.Conv2d(64, 128, 3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),                          # still 7×7
         )
         self.classifier = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(64 * 7 * 7, 128),
+            nn.Linear(128 * 7 * 7, 256),
+            nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.Dropout(0.25),
-            nn.Linear(128, 10),
+            nn.Dropout(0.4),
+            nn.Linear(256, num_classes),
         )
 
     def forward(self, x):
         return self.classifier(self.features(x))
 
 
+# ── EMNIST label map ───────────────────────────────────────────────────────────
+# EMNIST balanced: 47 classes — digits, A-Z, then 11 ambiguous lowercase letters
+EMNIST_LABELS = list(string.digits + string.ascii_uppercase + 'abdefghnqrt')
+
+
 # ── Data ───────────────────────────────────────────────────────────────────────
 
-def get_dataloaders(batch_size=64):
-    train_transform = transforms.Compose([
-        transforms.RandomAffine(
-            degrees=10,           # ±10° rotation
-            translate=(0.1, 0.1), # ±10% shift
-            scale=(0.9, 1.1),     # ±10% zoom
-        ),
-        transforms.ElasticTransform(alpha=34.0, sigma=4.0),  # simulates natural pen-pressure variation
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,)),
-    ])
-    test_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,)),
-    ])
-    train_data = datasets.MNIST("./data", train=True,  download=True, transform=train_transform)
-    test_data  = datasets.MNIST("./data", train=False, download=True, transform=test_transform)
-    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
-    test_loader  = DataLoader(test_data,  batch_size=batch_size)
-    return train_loader, test_loader
+def _emnist_fix(img):
+    """EMNIST images are transposed vs MNIST; rotate + flip to correct."""
+    return img.rotate(-90).transpose(Image.FLIP_LEFT_RIGHT)
+
+
+def get_dataloaders(dataset='mnist', batch_size=64):
+    aug = [
+        transforms.RandomAffine(degrees=10, translate=(0.1, 0.1), scale=(0.9, 1.1)),
+        transforms.ElasticTransform(alpha=34.0, sigma=4.0),
+    ]
+
+    if dataset == 'mnist':
+        norm = [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+        train_t = transforms.Compose(aug + norm)
+        test_t  = transforms.Compose(norm)
+        train_d = datasets.MNIST('./data', train=True,  download=True, transform=train_t)
+        test_d  = datasets.MNIST('./data', train=False, download=True, transform=test_t)
+    else:  # emnist balanced
+        fix  = [transforms.Lambda(_emnist_fix)]
+        norm = [transforms.ToTensor(), transforms.Normalize((0.1736,), (0.3317,))]
+        train_t = transforms.Compose(fix + aug + norm)
+        test_t  = transforms.Compose(fix + norm)
+        train_d = datasets.EMNIST('./data', split='balanced', train=True,  download=True, transform=train_t)
+        test_d  = datasets.EMNIST('./data', split='balanced', train=False, download=True, transform=test_t)
+
+    return (DataLoader(train_d, batch_size=batch_size, shuffle=True),
+            DataLoader(test_d,  batch_size=batch_size))
 
 
 # ── Training ───────────────────────────────────────────────────────────────────
@@ -60,15 +85,15 @@ def get_dataloaders(batch_size=64):
 def train(model, loader, optimizer, criterion, device):
     model.train()
     total_loss, correct = 0.0, 0
-    for images, labels in loader:
-        images, labels = images.to(device), labels.to(device)
+    for imgs, labels in loader:
+        imgs, labels = imgs.to(device), labels.to(device)
         optimizer.zero_grad()
-        outputs = model(images)
-        loss = criterion(outputs, labels)
+        out = model(imgs)
+        loss = criterion(out, labels)
         loss.backward()
         optimizer.step()
-        total_loss += loss.item() * images.size(0)
-        correct += (outputs.argmax(1) == labels).sum().item()
+        total_loss += loss.item() * imgs.size(0)
+        correct += (out.argmax(1) == labels).sum().item()
     n = len(loader.dataset)
     return total_loss / n, correct / n
 
@@ -77,11 +102,11 @@ def evaluate(model, loader, criterion, device):
     model.eval()
     total_loss, correct = 0.0, 0
     with torch.no_grad():
-        for images, labels in loader:
-            images, labels = images.to(device), labels.to(device)
-            outputs = model(images)
-            total_loss += criterion(outputs, labels).item() * images.size(0)
-            correct += (outputs.argmax(1) == labels).sum().item()
+        for imgs, labels in loader:
+            imgs, labels = imgs.to(device), labels.to(device)
+            out = model(imgs)
+            total_loss += criterion(out, labels).item() * imgs.size(0)
+            correct += (out.argmax(1) == labels).sum().item()
     n = len(loader.dataset)
     return total_loss / n, correct / n
 
@@ -89,66 +114,55 @@ def evaluate(model, loader, criterion, device):
 # ── Inference on a custom image ────────────────────────────────────────────────
 
 def predict_image(model, image_path, device):
-    """
-    Predict the digit in an image file.
-    Expects a grayscale image (or converts automatically).
-    White digit on black background works best; if yours is inverted,
-    set invert=True below.
-    """
-    invert = False  # set True if your image has a black digit on white background
-
-    transform = transforms.Compose([
+    t = transforms.Compose([
         transforms.Grayscale(),
         transforms.Resize((28, 28)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
     ])
-    img = Image.open(image_path)
-    tensor = transform(img).unsqueeze(0).to(device)  # (1, 1, 28, 28)
-    if invert:
-        tensor = 1 - tensor
-
+    tensor = t(Image.open(image_path)).unsqueeze(0).to(device)
     model.eval()
     with torch.no_grad():
-        logits = model(tensor)
-        probs = torch.softmax(logits, dim=1).squeeze()
-        digit = probs.argmax().item()
-        confidence = probs[digit].item()
-    print(f"Predicted digit: {digit}  (confidence: {confidence:.1%})")
-    return digit, confidence
+        probs = torch.softmax(model(tensor), dim=1).squeeze()
+    digit = probs.argmax().item()
+    print(f"Predicted: {digit}  ({probs[digit]:.1%})")
+    return digit, float(probs[digit])
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', choices=['mnist', 'emnist'], default='mnist',
+                        help='mnist (10 classes) or emnist balanced (47 classes)')
+    parser.add_argument('--epochs', type=int, default=10)
+    args = parser.parse_args()
 
-    train_loader, test_loader = get_dataloaders(batch_size=64)
+    num_classes = 10 if args.dataset == 'mnist' else 47
+    save_path   = 'digit_model.pth' if args.dataset == 'mnist' else 'emnist_model.pth'
 
-    model     = DigitCNN().to(device)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Dataset: {args.dataset}  |  Classes: {num_classes}  |  Device: {device}")
+
+    train_loader, test_loader = get_dataloaders(args.dataset)
+    model     = DigitCNN(num_classes=num_classes).to(device)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
     criterion = nn.CrossEntropyLoss()
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.5)
 
-    epochs = 10
-    for epoch in range(1, epochs + 1):
+    for epoch in range(1, args.epochs + 1):
         tr_loss, tr_acc = train(model, train_loader, optimizer, criterion, device)
         te_loss, te_acc = evaluate(model, test_loader, criterion, device)
         scheduler.step()
         print(
-            f"Epoch {epoch:02d}/{epochs}  "
+            f"Epoch {epoch:02d}/{args.epochs}  "
             f"train loss {tr_loss:.4f}  train acc {tr_acc:.2%}  "
             f"test loss {te_loss:.4f}  test acc {te_acc:.2%}"
         )
 
-    torch.save(model.state_dict(), "digit_model.pth")
-    print("Model saved to digit_model.pth")
-
-    # ── To load and run on your own image later: ──
-    # model.load_state_dict(torch.load("digit_model.pth", map_location=device))
-    # predict_image(model, "my_digit.png", device)
+    torch.save(model.state_dict(), save_path)
+    print(f"Model saved to {save_path}")
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

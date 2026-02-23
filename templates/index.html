@@ -15,12 +15,44 @@
       justify-content: center;
       background: #f0f2f5;
       font-family: system-ui, sans-serif;
-      gap: 24px;
+      gap: 16px;
       padding: 24px;
     }
 
     h1 { font-size: 1.6rem; color: #1a1a2e; }
 
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 520px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    input[type="range"] { width: 80px; accent-color: #4f46e5; }
+
+    .icon-btn {
+      background: none;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      color: #374151;
+    }
+    .icon-btn:hover { background: #e5e7eb; }
+
+    /* ── Canvas ── */
     #canvas-wrapper {
       position: relative;
       border-radius: 16px;
@@ -35,16 +67,19 @@
       touch-action: none;
     }
 
+    /* ── Buttons ── */
     .buttons {
       display: flex;
-      gap: 12px;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     button {
-      padding: 12px 28px;
+      padding: 10px 22px;
       border: none;
       border-radius: 10px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
       transition: opacity 0.15s;
@@ -53,20 +88,47 @@
 
     #btn-predict { background: #4f46e5; color: #fff; }
     #btn-clear   { background: #e5e7eb; color: #374151; }
+    #btn-undo    { background: #e5e7eb; color: #374151; }
+    #btn-copy    { background: #e5e7eb; color: #374151; }
 
-    #result {
-      font-size: 1.15rem;
-      color: #374151;
-      min-height: 1.5em;
+    .auto-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: #6b7280;
+      padding: 4px 0;
+    }
+
+    /* toggle switch */
+    .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider-sw {
+      position: absolute; inset: 0; background: #d1d5db; border-radius: 20px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .slider-sw::before {
+      content: ''; position: absolute; width: 14px; height: 14px;
+      left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s;
+    }
+    .switch input:checked + .slider-sw { background: #4f46e5; }
+    .switch input:checked + .slider-sw::before { transform: translateX(16px); }
+
+    /* ── Status ── */
+    #status {
+      font-size: 1rem;
+      color: #6b7280;
+      min-height: 1.4em;
       text-align: center;
     }
 
+    /* ── Digit cards ── */
     .digit-sequence {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 14px;
       justify-content: center;
-      max-width: 520px;
+      max-width: 560px;
     }
 
     .digit-card {
@@ -74,28 +136,94 @@
       flex-direction: column;
       align-items: center;
       background: #fff;
-      border-radius: 12px;
-      padding: 10px 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      min-width: 56px;
+      border-radius: 14px;
+      padding: 12px 14px 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      min-width: 80px;
+      gap: 4px;
+      position: relative;
     }
 
-    .digit-card .digit-val {
+    .digit-val {
       font-size: 2.8rem;
       font-weight: 800;
       color: #4f46e5;
       line-height: 1;
     }
 
-    .digit-card .digit-conf {
-      font-size: 0.75rem;
-      color: #9ca3af;
-      margin-top: 4px;
+    .uncertain-badge {
+      font-size: 0.9rem;
+      background: #fef3c7;
+      color: #d97706;
+      border-radius: 999px;
+      padding: 1px 6px;
+      font-weight: 700;
+      vertical-align: middle;
+      margin-left: 2px;
     }
+
+    .digit-conf { font-size: 0.78rem; color: #9ca3af; }
+
+    .card-images {
+      width: 56px;
+      height: 56px;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card-images img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      position: absolute;
+      top: 0; left: 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .card-images img.active { opacity: 1; }
+
+    .toggle-view-btn {
+      padding: 3px 8px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: #f3f4f6;
+      color: #6b7280;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .toggle-view-btn:hover { background: #e5e7eb; }
+
+    /* ── Footer ── */
+    .footer-link {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      text-decoration: none;
+    }
+    .footer-link:hover { color: #4f46e5; text-decoration: underline; }
   </style>
 </head>
 <body>
   <h1>Handwritten Digit Recognizer</h1>
+
+  <!-- Toolbar: brush size + theme toggle -->
+  <div class="toolbar">
+    <label>
+      Brush
+      <input type="range" id="brush-size" min="8" max="40" value="18">
+    </label>
+    <button class="icon-btn" id="btn-theme" title="Toggle light/dark canvas">🌙</button>
+    <span style="flex:1"></span>
+    <label class="auto-label">
+      Auto-predict
+      <label class="switch">
+        <input type="checkbox" id="auto-toggle" checked>
+        <span class="slider-sw"></span>
+      </label>
+    </label>
+  </div>
 
   <div id="canvas-wrapper">
     <canvas id="canvas" width="520" height="300"></canvas>
@@ -103,32 +231,46 @@
 
   <div class="buttons">
     <button id="btn-predict">Predict</button>
+    <button id="btn-undo">Undo</button>
     <button id="btn-clear">Clear</button>
+    <button id="btn-copy">Copy</button>
   </div>
 
-  <div id="result">Draw digits above, then click Predict.</div>
-  <div id="top3-container"></div>
+  <div id="status">Draw digits above, then click Predict.</div>
+  <div id="digit-container"></div>
+
+  <a class="footer-link" href="/confusion.png" target="_blank">View confusion matrix →</a>
 
   <script>
-    const canvas  = document.getElementById("canvas");
-    const ctx     = canvas.getContext("2d");
-    const result  = document.getElementById("result");
+    const canvas    = document.getElementById('canvas');
+    const ctx       = canvas.getContext('2d');
+    const status    = document.getElementById('status');
+    const container = document.getElementById('digit-container');
 
-    // Drawing state
-    let drawing = false;
-    ctx.strokeStyle = "#ffffff";
+    // ── Drawing setup ──────────────────────────────────────────────────────────
+    let drawing  = false;
+    let darkMode = true;
+    const history = [];  // canvas state snapshots for undo
+
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth   = 18;
-    ctx.lineCap     = "round";
-    ctx.lineJoin    = "round";
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
 
     function pos(e) {
-      const r = canvas.getBoundingClientRect();
+      const r   = canvas.getBoundingClientRect();
       const src = e.touches ? e.touches[0] : e;
       return { x: src.clientX - r.left, y: src.clientY - r.top };
     }
 
+    function saveHistory() {
+      history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+      if (history.length > 30) history.shift();
+    }
+
     function startDraw(e) {
       e.preventDefault();
+      saveHistory();
       drawing = true;
       const { x, y } = pos(e);
       ctx.beginPath();
@@ -145,58 +287,138 @@
 
     function stopDraw(e) {
       e.preventDefault();
+      if (!drawing) return;
       drawing = false;
+      if (document.getElementById('auto-toggle').checked) {
+        scheduleAutoPredict();
+      }
     }
 
-    // Mouse
-    canvas.addEventListener("mousedown",  startDraw);
-    canvas.addEventListener("mousemove",  draw);
-    canvas.addEventListener("mouseup",    stopDraw);
-    canvas.addEventListener("mouseleave", stopDraw);
+    canvas.addEventListener('mousedown',  startDraw);
+    canvas.addEventListener('mousemove',  draw);
+    canvas.addEventListener('mouseup',    stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove',  draw,      { passive: false });
+    canvas.addEventListener('touchend',   stopDraw,  { passive: false });
 
-    // Touch
-    canvas.addEventListener("touchstart", startDraw, { passive: false });
-    canvas.addEventListener("touchmove",  draw,      { passive: false });
-    canvas.addEventListener("touchend",   stopDraw,  { passive: false });
-
-    // Clear
-    document.getElementById("btn-clear").addEventListener("click", () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      result.innerHTML = "Draw digits above, then click Predict.";
-      document.getElementById("top3-container").innerHTML = "";
+    // ── Brush size ─────────────────────────────────────────────────────────────
+    document.getElementById('brush-size').addEventListener('input', e => {
+      ctx.lineWidth = parseInt(e.target.value);
     });
 
-    // Predict
-    document.getElementById("btn-predict").addEventListener("click", async () => {
-      result.innerHTML = "Thinking…";
-      const imageData = canvas.toDataURL("image/png");
+    // ── Theme toggle ───────────────────────────────────────────────────────────
+    document.getElementById('btn-theme').addEventListener('click', () => {
+      darkMode = !darkMode;
+      canvas.style.background    = darkMode ? '#1a1a2e' : '#ffffff';
+      ctx.strokeStyle            = darkMode ? '#ffffff'  : '#1a1a2e';
+      document.getElementById('btn-theme').textContent = darkMode ? '🌙' : '☀️';
+    });
 
-      const container = document.getElementById("top3-container");
+    // ── Undo ───────────────────────────────────────────────────────────────────
+    function undo() {
+      clearTimeout(autoPredictTimer);
+      if (history.length > 0) {
+        ctx.putImageData(history.pop(), 0, 0);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      container.innerHTML = '';
+      status.textContent  = 'Draw digits above, then click Predict.';
+    }
+
+    document.getElementById('btn-undo').addEventListener('click', undo);
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+    });
+
+    // ── Clear ──────────────────────────────────────────────────────────────────
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      clearTimeout(autoPredictTimer);
+      history.length     = 0;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      container.innerHTML = '';
+      status.textContent  = 'Draw digits above, then click Predict.';
+    });
+
+    // ── Copy ───────────────────────────────────────────────────────────────────
+    document.getElementById('btn-copy').addEventListener('click', async () => {
+      const text = [...document.querySelectorAll('.digit-val')]
+        .map(el => el.dataset.digit).join('');
+      if (!text) return;
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById('btn-copy');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1500);
+    });
+
+    // ── Auto-predict ───────────────────────────────────────────────────────────
+    let autoPredictTimer = null;
+
+    function scheduleAutoPredict() {
+      clearTimeout(autoPredictTimer);
+      autoPredictTimer = setTimeout(doPrediction, 900);
+    }
+
+    // ── Predict ────────────────────────────────────────────────────────────────
+    document.getElementById('btn-predict').addEventListener('click', () => {
+      clearTimeout(autoPredictTimer);
+      doPrediction();
+    });
+
+    async function doPrediction() {
+      status.textContent = 'Thinking…';
+      const imageData = canvas.toDataURL('image/png');
       try {
-        const resp = await fetch("/predict", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: imageData }),
+        const resp  = await fetch('/predict', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ image: imageData }),
         });
         const { digits } = await resp.json();
         if (!digits.length) {
-          result.innerHTML = "Nothing drawn — try again.";
-          container.innerHTML = "";
+          status.textContent  = 'Nothing drawn — try again.';
+          container.innerHTML = '';
           return;
         }
-        result.innerHTML = "";
-        container.innerHTML = `<div class="digit-sequence">${
-          digits.map(p => `
-            <div class="digit-card">
-              <div class="digit-val">${p.digit}</div>
-              <div class="digit-conf">${p.confidence}%</div>
-            </div>`).join("")
-        }</div>`;
+        status.textContent  = '';
+        container.innerHTML = `<div class="digit-sequence">${digits.map(buildCard).join('')}</div>`;
       } catch {
-        result.innerHTML = "Error — is the server running?";
-        container.innerHTML = "";
+        status.textContent = 'Error — is the server running?';
       }
-    });
+    }
+
+    // ── Digit card HTML ────────────────────────────────────────────────────────
+    function buildCard(p) {
+      const badge = p.uncertain
+        ? '<span class="uncertain-badge">?</span>'
+        : '';
+      return `
+        <div class="digit-card">
+          <div class="digit-val" data-digit="${p.digit}">${p.digit}${badge}</div>
+          <div class="digit-conf">${p.confidence}%</div>
+          <div class="card-images">
+            <img class="preview-img active" src="${p.preview}" title="28×28 model input">
+            <img class="heatmap-img"        src="${p.heatmap}" title="Grad-CAM heatmap">
+          </div>
+          <button class="toggle-view-btn" onclick="toggleView(this)">CAM</button>
+        </div>`;
+    }
+
+    function toggleView(btn) {
+      const card    = btn.closest('.digit-card');
+      const preview = card.querySelector('.preview-img');
+      const heatmap = card.querySelector('.heatmap-img');
+      if (preview.classList.contains('active')) {
+        preview.classList.remove('active');
+        heatmap.classList.add('active');
+        btn.textContent = '28px';
+      } else {
+        heatmap.classList.remove('active');
+        preview.classList.add('active');
+        btn.textContent = 'CAM';
+      }
+    }
   </script>
 </body>
 </html>

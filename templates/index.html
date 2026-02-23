@@ -31,8 +31,8 @@
     canvas {
       display: block;
       background: #1a1a2e;
-      cursor: crosshair;
-      touch-action: none; /* prevent scroll while drawing on touch */
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z' fill='white' stroke='%23555' stroke-width='1.2'/%3E%3C/svg%3E") 2 22, crosshair;
+      touch-action: none;
     }
 
     .buttons {
@@ -66,7 +66,7 @@
       flex-wrap: wrap;
       gap: 12px;
       justify-content: center;
-      max-width: 480px;
+      max-width: 520px;
     }
 
     .digit-card {
@@ -98,7 +98,7 @@
   <h1>Handwritten Digit Recognizer</h1>
 
   <div id="canvas-wrapper">
-    <canvas id="canvas" width="280" height="280"></canvas>
+    <canvas id="canvas" width="520" height="300"></canvas>
   </div>
 
   <div class="buttons">

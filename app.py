@@ -52,14 +52,12 @@ def crop_and_center(img: Image.Image) -> Image.Image:
     """
     Mimic MNIST preprocessing: crop tightly around the drawn pixels,
     pad to square, then resize to 28x28.
-    This prevents the digit from being tiny/off-center in the 28x28 input.
     """
     arr = np.array(img)
     rows = np.any(arr > 10, axis=1)
     cols = np.any(arr > 10, axis=0)
 
     if not rows.any():
-        # Canvas is empty — return blank image
         return img.resize((28, 28))
 
     rmin, rmax = np.where(rows)[0][[0, -1]]
@@ -67,12 +65,68 @@ def crop_and_center(img: Image.Image) -> Image.Image:
 
     img = img.crop((cmin, rmin, cmax + 1, rmax + 1))
 
-    # Pad to square with 20% margin (matches MNIST centering)
     w, h = img.size
     pad = max(w, h) // 4
     img = ImageOps.expand(img, border=pad, fill=0)
     img = img.resize((28, 28), Image.LANCZOS)
     return img
+
+
+def segment_digits(img: Image.Image) -> list[Image.Image]:
+    """
+    Split a canvas image into individual digit crops by finding vertical gaps.
+    Uses column projection: columns with no ink mark boundaries between digits.
+    Intra-digit gaps ≤ 8px are merged so strokes within one digit stay together.
+    Returns crops sorted left-to-right.
+    """
+    arr = np.array(img)
+    col_has_ink = np.any(arr > 10, axis=0)  # True for each column that has ink
+
+    # Find contiguous runs of inked columns
+    segments = []
+    in_seg = False
+    start = 0
+    for i, has_ink in enumerate(col_has_ink):
+        if has_ink and not in_seg:
+            in_seg, start = True, i
+        elif not has_ink and in_seg:
+            in_seg = False
+            segments.append([start, i])
+    if in_seg:
+        segments.append([start, len(col_has_ink)])
+
+    if not segments:
+        return []
+
+    # Merge segments whose gap is ≤ 8px (handles lifted strokes within one digit)
+    merged = [segments[0]]
+    for seg in segments[1:]:
+        if seg[0] - merged[-1][1] <= 8:
+            merged[-1][1] = seg[1]
+        else:
+            merged.append(seg)
+
+    # Crop each segment to its tight bounding box
+    crops = []
+    for x_start, x_end in merged:
+        col_slice = arr[:, x_start:x_end]
+        rows_with_ink = np.any(col_slice > 10, axis=1)
+        if not rows_with_ink.any():
+            continue
+        y_start = int(np.where(rows_with_ink)[0][0])
+        y_end   = int(np.where(rows_with_ink)[0][-1]) + 1
+        crops.append(img.crop((x_start, y_start, x_end, y_end)))
+
+    return crops
+
+
+def classify(crop: Image.Image) -> tuple[int, float]:
+    """Run a single digit crop through the model."""
+    tensor = transform(crop_and_center(crop)).unsqueeze(0).to(device)
+    with torch.no_grad():
+        probs = torch.softmax(model(tensor), dim=1).squeeze()
+    digit = int(probs.argmax())
+    return digit, round(float(probs[digit]) * 100, 1)
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -94,18 +148,12 @@ def predict():
     background.paste(img, mask=img.split()[3])
     img = background.convert("L")  # grayscale: white digit on black bg
 
-    img = crop_and_center(img)
-    tensor = transform(img).unsqueeze(0).to(device)
+    crops = segment_digits(img)
+    if not crops:
+        return jsonify({"digits": []})
 
-    with torch.no_grad():
-        probs = torch.softmax(model(tensor), dim=1).squeeze()
-        top3 = probs.topk(3)
-
-    results = [
-        {"digit": int(idx), "confidence": round(float(prob) * 100, 1)}
-        for prob, idx in zip(top3.values, top3.indices)
-    ]
-    return jsonify({"top3": results})
+    digits = [{"digit": d, "confidence": c} for d, c in (classify(crop) for crop in crops)]
+    return jsonify({"digits": digits})
 
 
 if __name__ == "__main__":

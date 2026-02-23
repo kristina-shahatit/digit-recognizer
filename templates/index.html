@@ -61,62 +61,37 @@
       text-align: center;
     }
 
-    .top3 {
+    .digit-sequence {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      max-width: 480px;
+    }
+
+    .digit-card {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      width: 280px;
-    }
-
-    .prediction-row {
-      display: flex;
       align-items: center;
-      gap: 10px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      min-width: 56px;
     }
 
-    .prediction-row.first .digit-label {
+    .digit-card .digit-val {
       font-size: 2.8rem;
       font-weight: 800;
       color: #4f46e5;
-      width: 48px;
-      text-align: center;
+      line-height: 1;
     }
 
-    .prediction-row .digit-label {
-      font-size: 1.4rem;
-      font-weight: 600;
-      color: #6b7280;
-      width: 48px;
-      text-align: center;
+    .digit-card .digit-conf {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-top: 4px;
     }
-
-    .bar-wrap {
-      flex: 1;
-      background: #e5e7eb;
-      border-radius: 99px;
-      height: 12px;
-      overflow: hidden;
-    }
-
-    .prediction-row.first .bar-wrap { height: 16px; }
-
-    .bar-fill {
-      height: 100%;
-      border-radius: 99px;
-      background: #c7d2fe;
-      transition: width 0.35s ease;
-    }
-
-    .prediction-row.first .bar-fill { background: #4f46e5; }
-
-    .pct {
-      font-size: 0.85rem;
-      color: #6b7280;
-      width: 44px;
-      text-align: right;
-    }
-
-    .prediction-row.first .pct { font-weight: 700; color: #4f46e5; }
   </style>
 </head>
 <body>
@@ -131,7 +106,7 @@
     <button id="btn-clear">Clear</button>
   </div>
 
-  <div id="result">Draw a digit above, then click Predict.</div>
+  <div id="result">Draw digits above, then click Predict.</div>
   <div id="top3-container"></div>
 
   <script>
@@ -187,7 +162,7 @@
     // Clear
     document.getElementById("btn-clear").addEventListener("click", () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      result.innerHTML = "Draw a digit above, then click Predict.";
+      result.innerHTML = "Draw digits above, then click Predict.";
       document.getElementById("top3-container").innerHTML = "";
     });
 
@@ -203,16 +178,18 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ image: imageData }),
         });
-        const { top3 } = await resp.json();
+        const { digits } = await resp.json();
+        if (!digits.length) {
+          result.innerHTML = "Nothing drawn — try again.";
+          container.innerHTML = "";
+          return;
+        }
         result.innerHTML = "";
-        container.innerHTML = `<div class="top3">${
-          top3.map((p, i) => `
-            <div class="prediction-row ${i === 0 ? "first" : ""}">
-              <div class="digit-label">${p.digit}</div>
-              <div class="bar-wrap">
-                <div class="bar-fill" style="width:${p.confidence}%"></div>
-              </div>
-              <div class="pct">${p.confidence}%</div>
+        container.innerHTML = `<div class="digit-sequence">${
+          digits.map(p => `
+            <div class="digit-card">
+              <div class="digit-val">${p.digit}</div>
+              <div class="digit-conf">${p.confidence}%</div>
             </div>`).join("")
         }</div>`;
       } catch {

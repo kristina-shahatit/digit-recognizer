@@ -9,55 +9,64 @@
 
     body {
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       background: #f0f2f5;
       font-family: system-ui, sans-serif;
-      gap: 16px;
-      padding: 24px;
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
 
-    h1 { font-size: 1.6rem; color: #1a1a2e; }
+    h1 { font-size: 1.5rem; color: #1a1a2e; font-weight: 800; }
 
-    /* ── Toolbar ── */
+    /* ── Two-column layout ── */
+    .main-layout {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ── Left panel ── */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .toolbar {
       display: flex;
       align-items: center;
-      gap: 16px;
-      width: 520px;
-      flex-wrap: wrap;
+      gap: 14px;
     }
 
     .toolbar label {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: #6b7280;
     }
 
-    input[type="range"] { width: 80px; accent-color: #4f46e5; }
+    input[type="range"] { width: 90px; accent-color: #4f46e5; }
 
     .icon-btn {
-      background: none;
-      border: 1.5px solid #d1d5db;
+      background: #fff;
+      border: 1.5px solid #e5e7eb;
       border-radius: 8px;
       padding: 5px 10px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       cursor: pointer;
       transition: background 0.15s;
       color: #374151;
     }
-    .icon-btn:hover { background: #e5e7eb; }
+    .icon-btn:hover { background: #f3f4f6; }
 
-    /* ── Canvas ── */
     #canvas-wrapper {
-      position: relative;
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      line-height: 0;
     }
 
     canvas {
@@ -67,19 +76,17 @@
       touch-action: none;
     }
 
-    /* ── Buttons ── */
     .buttons {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
-      justify-content: center;
     }
 
     button {
-      padding: 10px 22px;
+      padding: 9px 20px;
       border: none;
       border-radius: 10px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       transition: opacity 0.15s;
@@ -87,25 +94,50 @@
     button:active { opacity: 0.75; }
 
     #btn-predict { background: #4f46e5; color: #fff; }
-    #btn-clear   { background: #e5e7eb; color: #374151; }
     #btn-undo    { background: #e5e7eb; color: #374151; }
+    #btn-clear   { background: #e5e7eb; color: #374151; }
     #btn-copy    { background: #e5e7eb; color: #374151; }
 
-    .auto-label {
+    /* ── Right panel ── */
+    .right-panel {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 300px;
+      height: 100%;
+    }
+
+    .panel-header {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.85rem;
-      color: #6b7280;
-      padding: 4px 0;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     /* toggle switch */
+    .auto-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.82rem;
+      color: #6b7280;
+    }
     .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider-sw {
-      position: absolute; inset: 0; background: #d1d5db; border-radius: 20px; cursor: pointer;
-      transition: background 0.2s;
+      position: absolute; inset: 0; background: #d1d5db; border-radius: 20px;
+      cursor: pointer; transition: background 0.2s;
     }
     .slider-sw::before {
       content: ''; position: absolute; width: 14px; height: 14px;
@@ -116,130 +148,141 @@
 
     /* ── Status ── */
     #status {
-      font-size: 1rem;
-      color: #6b7280;
-      min-height: 1.4em;
+      font-size: 0.95rem;
+      color: #9ca3af;
       text-align: center;
+      padding: 12px 0;
     }
 
     /* ── Digit cards ── */
     .digit-sequence {
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
-      justify-content: center;
-      max-width: 560px;
+      gap: 12px;
     }
 
     .digit-card {
       display: flex;
       flex-direction: column;
       align-items: center;
-      background: #fff;
+      background: #f9fafb;
       border-radius: 14px;
       padding: 12px 14px 10px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      min-width: 80px;
+      border: 1.5px solid #e5e7eb;
       gap: 4px;
-      position: relative;
     }
 
     .digit-val {
-      font-size: 2.8rem;
+      font-size: 2.6rem;
       font-weight: 800;
       color: #4f46e5;
       line-height: 1;
     }
 
     .uncertain-badge {
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       background: #fef3c7;
       color: #d97706;
       border-radius: 999px;
-      padding: 1px 6px;
+      padding: 1px 5px;
       font-weight: 700;
       vertical-align: middle;
       margin-left: 2px;
     }
 
-    .digit-conf { font-size: 0.78rem; color: #9ca3af; }
+    .digit-conf { font-size: 0.75rem; color: #9ca3af; }
 
     .card-images {
-      width: 56px;
-      height: 56px;
+      width: 56px; height: 56px;
       border-radius: 6px;
       overflow: hidden;
       position: relative;
     }
-
     .card-images img {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       object-fit: cover;
       image-rendering: pixelated;
-      position: absolute;
-      top: 0; left: 0;
-      opacity: 0;
-      transition: opacity 0.2s;
+      position: absolute; top: 0; left: 0;
+      opacity: 0; transition: opacity 0.2s;
     }
     .card-images img.active { opacity: 1; }
 
     .toggle-view-btn {
       padding: 3px 8px;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 600;
-      background: #f3f4f6;
+      background: #e5e7eb;
       color: #6b7280;
       border: none;
       border-radius: 6px;
       cursor: pointer;
     }
-    .toggle-view-btn:hover { background: #e5e7eb; }
+    .toggle-view-btn:hover { background: #d1d5db; }
 
-    /* ── Footer ── */
+    /* ── Footer link ── */
     .footer-link {
-      font-size: 0.85rem;
+      margin-top: auto;
+      font-size: 0.82rem;
       color: #9ca3af;
       text-decoration: none;
+      text-align: center;
     }
     .footer-link:hover { color: #4f46e5; text-decoration: underline; }
+
+    /* ── Responsive: stack on narrow screens ── */
+    @media (max-width: 780px) {
+      .main-layout { grid-template-columns: 1fr; }
+      canvas { width: 100% !important; height: auto !important; }
+    }
   </style>
 </head>
 <body>
   <h1>Handwritten Digit Recognizer</h1>
 
-  <!-- Toolbar: brush size + theme toggle -->
-  <div class="toolbar">
-    <label>
-      Brush
-      <input type="range" id="brush-size" min="8" max="40" value="18">
-    </label>
-    <button class="icon-btn" id="btn-theme" title="Toggle light/dark canvas">🌙</button>
-    <span style="flex:1"></span>
-    <label class="auto-label">
-      Auto-predict
-      <label class="switch">
-        <input type="checkbox" id="auto-toggle" checked>
-        <span class="slider-sw"></span>
-      </label>
-    </label>
+  <div class="main-layout">
+
+    <!-- ── Left: canvas + controls ── -->
+    <div class="left-panel">
+      <div class="toolbar">
+        <label>
+          Brush
+          <input type="range" id="brush-size" min="8" max="40" value="18">
+        </label>
+        <button class="icon-btn" id="btn-theme" title="Toggle light/dark canvas">🌙</button>
+      </div>
+
+      <div id="canvas-wrapper">
+        <canvas id="canvas" width="680" height="440"></canvas>
+      </div>
+
+      <div class="buttons">
+        <button id="btn-predict">Predict</button>
+        <button id="btn-undo">Undo</button>
+        <button id="btn-clear">Clear</button>
+        <button id="btn-copy">Copy</button>
+      </div>
+    </div>
+
+    <!-- ── Right: results panel ── -->
+    <div class="right-panel">
+      <div class="panel-header">
+        <span class="panel-title">Results</span>
+        <label class="auto-label">
+          Auto
+          <label class="switch">
+            <input type="checkbox" id="auto-toggle" checked>
+            <span class="slider-sw"></span>
+          </label>
+        </label>
+      </div>
+
+      <div id="status">Draw digits on the canvas.</div>
+      <div id="digit-container"></div>
+
+      <a class="footer-link" href="/confusion.png" target="_blank">View confusion matrix →</a>
+    </div>
+
   </div>
-
-  <div id="canvas-wrapper">
-    <canvas id="canvas" width="520" height="300"></canvas>
-  </div>
-
-  <div class="buttons">
-    <button id="btn-predict">Predict</button>
-    <button id="btn-undo">Undo</button>
-    <button id="btn-clear">Clear</button>
-    <button id="btn-copy">Copy</button>
-  </div>
-
-  <div id="status">Draw digits above, then click Predict.</div>
-  <div id="digit-container"></div>
-
-  <a class="footer-link" href="/confusion.png" target="_blank">View confusion matrix →</a>
 
   <script>
     const canvas    = document.getElementById('canvas');
@@ -247,10 +290,9 @@
     const status    = document.getElementById('status');
     const container = document.getElementById('digit-container');
 
-    // ── Drawing setup ──────────────────────────────────────────────────────────
     let drawing  = false;
     let darkMode = true;
-    const history = [];  // canvas state snapshots for undo
+    const history = [];
 
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth   = 18;
@@ -260,7 +302,10 @@
     function pos(e) {
       const r   = canvas.getBoundingClientRect();
       const src = e.touches ? e.touches[0] : e;
-      return { x: src.clientX - r.left, y: src.clientY - r.top };
+      // Scale mouse coords to canvas coordinate space (handles CSS scaling)
+      const scaleX = canvas.width  / r.width;
+      const scaleY = canvas.height / r.height;
+      return { x: (src.clientX - r.left) * scaleX, y: (src.clientY - r.top) * scaleY };
     }
 
     function saveHistory() {
@@ -289,9 +334,7 @@
       e.preventDefault();
       if (!drawing) return;
       drawing = false;
-      if (document.getElementById('auto-toggle').checked) {
-        scheduleAutoPredict();
-      }
+      if (document.getElementById('auto-toggle').checked) scheduleAutoPredict();
     }
 
     canvas.addEventListener('mousedown',  startDraw);
@@ -302,20 +345,20 @@
     canvas.addEventListener('touchmove',  draw,      { passive: false });
     canvas.addEventListener('touchend',   stopDraw,  { passive: false });
 
-    // ── Brush size ─────────────────────────────────────────────────────────────
+    // ── Brush size ────────────────────────────────────────────────────────────
     document.getElementById('brush-size').addEventListener('input', e => {
       ctx.lineWidth = parseInt(e.target.value);
     });
 
-    // ── Theme toggle ───────────────────────────────────────────────────────────
+    // ── Theme toggle ──────────────────────────────────────────────────────────
     document.getElementById('btn-theme').addEventListener('click', () => {
       darkMode = !darkMode;
-      canvas.style.background    = darkMode ? '#1a1a2e' : '#ffffff';
-      ctx.strokeStyle            = darkMode ? '#ffffff'  : '#1a1a2e';
+      canvas.style.background = darkMode ? '#1a1a2e' : '#ffffff';
+      ctx.strokeStyle         = darkMode ? '#ffffff'  : '#1a1a2e';
       document.getElementById('btn-theme').textContent = darkMode ? '🌙' : '☀️';
     });
 
-    // ── Undo ───────────────────────────────────────────────────────────────────
+    // ── Undo ─────────────────────────────────────────────────────────────────
     function undo() {
       clearTimeout(autoPredictTimer);
       if (history.length > 0) {
@@ -324,7 +367,7 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
       container.innerHTML = '';
-      status.textContent  = 'Draw digits above, then click Predict.';
+      status.textContent  = 'Draw digits on the canvas.';
     }
 
     document.getElementById('btn-undo').addEventListener('click', undo);
@@ -332,16 +375,16 @@
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
     });
 
-    // ── Clear ──────────────────────────────────────────────────────────────────
+    // ── Clear ─────────────────────────────────────────────────────────────────
     document.getElementById('btn-clear').addEventListener('click', () => {
       clearTimeout(autoPredictTimer);
-      history.length     = 0;
+      history.length      = 0;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       container.innerHTML = '';
-      status.textContent  = 'Draw digits above, then click Predict.';
+      status.textContent  = 'Draw digits on the canvas.';
     });
 
-    // ── Copy ───────────────────────────────────────────────────────────────────
+    // ── Copy ──────────────────────────────────────────────────────────────────
     document.getElementById('btn-copy').addEventListener('click', async () => {
       const text = [...document.querySelectorAll('.digit-val')]
         .map(el => el.dataset.digit).join('');
@@ -352,7 +395,7 @@
       setTimeout(() => btn.textContent = 'Copy', 1500);
     });
 
-    // ── Auto-predict ───────────────────────────────────────────────────────────
+    // ── Auto-predict ──────────────────────────────────────────────────────────
     let autoPredictTimer = null;
 
     function scheduleAutoPredict() {
@@ -360,17 +403,17 @@
       autoPredictTimer = setTimeout(doPrediction, 900);
     }
 
-    // ── Predict ────────────────────────────────────────────────────────────────
     document.getElementById('btn-predict').addEventListener('click', () => {
       clearTimeout(autoPredictTimer);
       doPrediction();
     });
 
+    // ── Predict ───────────────────────────────────────────────────────────────
     async function doPrediction() {
       status.textContent = 'Thinking…';
       const imageData = canvas.toDataURL('image/png');
       try {
-        const resp  = await fetch('/predict', {
+        const resp        = await fetch('/predict', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ image: imageData }),
@@ -388,11 +431,9 @@
       }
     }
 
-    // ── Digit card HTML ────────────────────────────────────────────────────────
+    // ── Digit card ────────────────────────────────────────────────────────────
     function buildCard(p) {
-      const badge = p.uncertain
-        ? '<span class="uncertain-badge">?</span>'
-        : '';
+      const badge = p.uncertain ? '<span class="uncertain-badge">?</span>' : '';
       return `
         <div class="digit-card">
           <div class="digit-val" data-digit="${p.digit}">${p.digit}${badge}</div>

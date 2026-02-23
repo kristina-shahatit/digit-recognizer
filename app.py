@@ -1,5 +1,6 @@
 import base64
 import io
+import os
 import numpy as np
 import torch
 import torch.nn as nn
@@ -7,6 +8,9 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 from PIL import Image, ImageOps
 from flask import Flask, request, jsonify, render_template
+
+# Resolve paths relative to this file so the app works from any working directory
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__)
 
@@ -46,7 +50,7 @@ class DigitCNN(nn.Module):
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = DigitCNN().to(device)
-model.load_state_dict(torch.load('digit_model.pth', map_location=device))
+model.load_state_dict(torch.load(os.path.join(_HERE, 'digit_model.pth'), map_location=device))
 model.eval()
 
 transform = transforms.Compose([
@@ -182,7 +186,7 @@ def build_confusion_matrix():
     import matplotlib.pyplot as plt
 
     norm   = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    loader = DataLoader(datasets.MNIST('./data', train=False, download=True, transform=norm), batch_size=256)
+    loader = DataLoader(datasets.MNIST(os.path.join(_HERE, 'data'), train=False, download=True, transform=norm), batch_size=256)
 
     preds, labels = [], []
     with torch.no_grad():
